@@ -45,10 +45,18 @@ program
 program.parse(process.argv);
 
 const options = program.opts() as CommandOptions;
+
+// 确保在没有配置文件时也能使用命令行参数
 const config = loadConfig(options);
 
+// 命令行参数优先级高于配置文件
 if (options.port) {
-    config.port = parseInt(options.port as string, 10);
+    const port = parseInt(options.port as string, 10);
+    if (isNaN(port)) {
+        console.error('端口号必须是有效的数字');
+        process.exit(1);
+    }
+    config.port = port;
 }
 
 if (options.dir) {

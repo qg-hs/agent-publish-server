@@ -53,16 +53,8 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         }
 
         if (!absolutePath) {
-            console.error('未找到配置文件');
-            console.log('你可以通过以下方式指定配置文件：');
-            console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
-            console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
-            console.log('3. 使用 agent-publish-server init 命令创建默认配置文件');
-            console.log('4. 在当前目录创建以下任一文件：');
-            console.log('   - agent_config.json');
-            console.log('   - .agent_config.json');
-            console.log('   - agent.config.json');
-            process.exit(1);
+            console.log('未找到配置文件，将使用默认配置');
+            return DEFAULT_CONFIG;
         }
 
         const configContent = fs.readFileSync(absolutePath, 'utf-8');
