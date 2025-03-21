@@ -20,56 +20,49 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         'agent.config.json'
     ].filter(Boolean);
 
-    try {
-        // 处理配置文件路径
-        let absolutePath = '';
-        if (path.isAbsolute(configPath)) {
-            // 如果是绝对路径，直接使用
-            absolutePath = configPath;
-        } else {
-            // 如果是相对路径，尝试多个可能的路径
-            const possiblePaths = [
-                path.resolve(process.cwd(), configPath), // 相对于当前工作目录
-                path.resolve(__dirname, configPath), // 相对于脚本所在目录
-            ];
+    let configPath = '';
+    let absolutePath = '';
 
-            for (const p of possiblePaths) {
-                if (fs.existsSync(p)) {
-                    absolutePath = p;
+    try {
+        // 遍历所有可能的配置文件路径
+        for (const cfgPath of configPaths) {
+            if (path.isAbsolute(cfgPath)) {
+                // 如果是绝对路径，直接检查文件是否存在
+                if (fs.existsSync(cfgPath)) {
+                    absolutePath = cfgPath;
+                    configPath = cfgPath;
                     break;
                 }
-            }
-        }
-
-        if (!absolutePath) {
-            for (const configPath of configPaths) {
+            } else if (cfgPath) {
+                // 如果是相对路径，尝试多个可能的路径
                 const possiblePaths = [
-                    path.resolve(process.cwd(), configPath),
-                    path.resolve(__dirname, configPath)
+                    path.resolve(process.cwd(), cfgPath),
+                    path.resolve(__dirname, cfgPath)
                 ];
 
                 for (const p of possiblePaths) {
                     if (fs.existsSync(p)) {
                         absolutePath = p;
+                        configPath = cfgPath;
                         break;
                     }
                 }
 
                 if (absolutePath) break;
             }
+        }
 
-            if (!absolutePath) {
-                console.error('未找到配置文件');
-                console.log('你可以通过以下方式指定配置文件：');
-                console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
-                console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
-                console.log('3. 使用 agent-publish-server init 命令创建默认配置文件');
-                console.log('4. 在当前目录创建以下任一文件：');
-                console.log('   - agent_config.json');
-                console.log('   - .agent_config.json');
-                console.log('   - agent.config.json');
-                process.exit(1);
-            }
+        if (!absolutePath) {
+            console.error('未找到配置文件');
+            console.log('你可以通过以下方式指定配置文件：');
+            console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
+            console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
+            console.log('3. 使用 agent-publish-server init 命令创建默认配置文件');
+            console.log('4. 在当前目录创建以下任一文件：');
+            console.log('   - agent_config.json');
+            console.log('   - .agent_config.json');
+            console.log('   - agent.config.json');
+            process.exit(1);
         }
 
         const configContent = fs.readFileSync(absolutePath, 'utf-8');
@@ -84,5 +77,4 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         }
         process.exit(1);
     }
-
 }

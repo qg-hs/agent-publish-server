@@ -15,4 +15,6 @@ export interface CommandOptions {
     c?: string;
     cf?: string;
     configFile?: string;
+    port?: string;
+    dir?: string;
 }
