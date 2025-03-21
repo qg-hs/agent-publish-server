@@ -16,10 +16,29 @@ agent-publish-server
 
 ## 配置
 
+### 配置文件路径
+
+你可以通过以下方式指定配置文件路径：
+
+1. 使用相对路径（相对于当前工作目录）：
+
 ```bash
-# 配置文件路径
 agent-publish-server -c ./agent_config.json
 ```
+
+2. 使用绝对路径：
+
+```bash
+agent-publish-server -c /path/to/agent_config.json
+```
+
+3. 使用初始化命令创建默认配置：
+
+```bash
+agent-publish-server init
+```
+
+### 配置文件格式
 
 ```json
 {
