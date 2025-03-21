@@ -1,6 +1,6 @@
 {
   "name": "agent-publish-server",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "基于 nodejs+express+http-proxy-middleware 的前端服务启动插件",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
