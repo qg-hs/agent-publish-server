@@ -19,7 +19,10 @@
     "server",
     "development"
   ],
-  "author": "qghs",
+  "author": {
+    "name": "qghs",
+    "email": "1556448918@qq.com"
+  },
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
