@@ -47,3 +47,5 @@ agent-publish-server -c ./agent_config.json
 > 4. 配置文件路径可以通过 --cf 来指定
 > 5. 配置文件路径可以通过 --config-file 来指定
 > 6. 适配 react vue 等前端框架
+> 7. 使用 -v 或 --version 查看当前版本
+> 8. 使用 init 命令初始化配置文件，将在当前目录生成 agent_config.json
