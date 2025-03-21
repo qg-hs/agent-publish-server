@@ -1,11 +1,11 @@
 {
-  "name": "agent-server",
+  "name": "agent-publish-server",
   "version": "1.0.0",
   "description": "基于 nodejs+express+http-proxy-middleware 的前端服务启动插件",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "agent-server": "dist/cli.js"
+    "agent-publish-server": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -24,6 +24,10 @@
     "email": "1556448918@qq.com"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qghs/agent-publish-server.git"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "http-proxy-middleware": "^2.0.6",

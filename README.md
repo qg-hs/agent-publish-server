@@ -1,24 +1,24 @@
-## agent-server
+## agent-publish-server
 
 > 这是一个基于 nodejs+express+http-proxy-middleware 的一款可支持代理的前端服务启动插件
 
 ## 安装
 
 ```bash
-npm install agent-server -g
+npm install agent-publish-server -g
 ```
 
 ## 使用
 
 ```bash
-agent-server
+agent-publish-server
 ```
 
 ## 配置
 
 ```bash
 # 配置文件路径
-agent-server -c ./agent_config.json
+agent-publish-server -c ./agent_config.json
 ```
 
 ```json
