@@ -14,7 +14,9 @@ program
     .version(packageJson.version, '-v, --version')
     .option('-c, --config <path>', '配置文件路径')
     .option('--cf <path>', '配置文件路径')
-    .option('--config-file <path>', '配置文件路径');
+    .option('--config-file <path>', '配置文件路径')
+    .option('-p, --port <number>', '服务器端口号')
+    .option('-d, --dir <path>', '静态文件目录路径');
 
 program
     .command('init')
@@ -42,12 +44,19 @@ program
 
 program.parse(process.argv);
 
-if (!program.args.length) {
-    const options = program.opts() as CommandOptions;
-    const config = loadConfig(options);
+const options = program.opts() as CommandOptions;
+const config = loadConfig(options);
 
-    startServer(config).catch((error) => {
-        console.error('Server failed to start:', error);
-        process.exit(1);
-    });
+if (options.port) {
+    config.port = parseInt(options.port as string, 10);
+}
+
+if (options.dir) {
+    config.dir = options.dir as string;
+}
+
+startServer(config).catch((error) => {
+    console.error('Server failed to start:', error);
+    process.exit(1);
+});
 }

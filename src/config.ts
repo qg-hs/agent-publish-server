@@ -9,11 +9,16 @@ const DEFAULT_CONFIG: AgentConfig = {
 };
 
 export function loadConfig(options: CommandOptions): AgentConfig {
-    const configPath = options.config ||
-        options.c ||
-        options.cf ||
-        options.configFile ||
-        'agent_config.json';
+    // 尝试多个可能的配置文件路径
+    const configPaths = [
+        options.config || '',
+        options.c || '',
+        options.cf || '',
+        options.configFile || '',
+        'agent_config.json',
+        '.agent_config.json',
+        'agent.config.json'
+    ].filter(Boolean);
 
     try {
         // 处理配置文件路径
@@ -37,12 +42,34 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         }
 
         if (!absolutePath) {
-            console.error(`配置文件不存在: ${configPath}`);
-            console.log('你可以通过以下方式指定配置文件路径：');
-            console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
-            console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
-            console.log('3. 使用 agent-publish-server init 命令创建默认配置文件');
-            process.exit(1);
+            for (const configPath of configPaths) {
+                const possiblePaths = [
+                    path.resolve(process.cwd(), configPath),
+                    path.resolve(__dirname, configPath)
+                ];
+
+                for (const p of possiblePaths) {
+                    if (fs.existsSync(p)) {
+                        absolutePath = p;
+                        break;
+                    }
+                }
+
+                if (absolutePath) break;
+            }
+
+            if (!absolutePath) {
+                console.error('未找到配置文件');
+                console.log('你可以通过以下方式指定配置文件：');
+                console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
+                console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
+                console.log('3. 使用 agent-publish-server init 命令创建默认配置文件');
+                console.log('4. 在当前目录创建以下任一文件：');
+                console.log('   - agent_config.json');
+                console.log('   - .agent_config.json');
+                console.log('   - agent.config.json');
+                process.exit(1);
+            }
         }
 
         const configContent = fs.readFileSync(absolutePath, 'utf-8');
