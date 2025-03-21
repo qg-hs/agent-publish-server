@@ -1,0 +1,12 @@
+src/
+tsconfig.json
+.gitignore
+.npmignore
+.DS_Store
+*.log
+.env
+.idea/
+.vscode/
+coverage/
+node_modules/
+yarn.lock
