@@ -16,9 +16,23 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         'agent_config.json';
 
     try {
-        const absolutePath = path.resolve(process.cwd(), configPath);
-        if (!fs.existsSync(absolutePath)) {
-            console.error(`配置文件不存在: ${absolutePath}`);
+        // 尝试多个可能的路径
+        const possiblePaths = [
+            configPath, // 直接使用输入路径
+            path.resolve(process.cwd(), configPath), // 相对于当前工作目录
+            path.resolve(__dirname, configPath), // 相对于脚本所在目录
+        ];
+
+        let absolutePath = '';
+        for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+                absolutePath = p;
+                break;
+            }
+        }
+
+        if (!absolutePath) {
+            console.error(`配置文件不存在: ${configPath}`);
             console.log('你可以通过以下方式指定配置文件路径：');
             console.log('1. 使用相对路径：agent-publish-server -c ./agent_config.json');
             console.log('2. 使用绝对路径：agent-publish-server -c /path/to/agent_config.json');
