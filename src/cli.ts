@@ -18,6 +18,35 @@ program
     .option('-p, --port <number>', '服务器端口号')
     .option('-d, --dir <path>', '静态文件目录路径');
 
+// 添加一个默认命令，用于处理没有指定任何子命令的情况
+program
+    .action(() => {
+        const options = program.opts() as CommandOptions;
+
+        // 加载配置
+        const config = loadConfig(options);
+
+        // 命令行参数优先级高于配置文件
+        if (options.port) {
+            const port = parseInt(options.port as string, 10);
+            if (isNaN(port)) {
+                console.error('端口号必须是有效的数字');
+                process.exit(1);
+            }
+            config.port = port;
+        }
+
+        if (options.dir) {
+            config.dir = options.dir as string;
+        }
+
+        // 启动服务器
+        startServer(config).catch((error) => {
+            console.error('Server failed to start:', error);
+            process.exit(1);
+        });
+    });
+
 program
     .command('init')
     .description('初始化配置文件')
@@ -43,27 +72,3 @@ program
     });
 
 program.parse(process.argv);
-
-const options = program.opts() as CommandOptions;
-
-// 确保在没有配置文件时也能使用命令行参数
-const config = loadConfig(options);
-
-// 命令行参数优先级高于配置文件
-if (options.port) {
-    const port = parseInt(options.port as string, 10);
-    if (isNaN(port)) {
-        console.error('端口号必须是有效的数字');
-        process.exit(1);
-    }
-    config.port = port;
-}
-
-if (options.dir) {
-    config.dir = options.dir as string;
-}
-
-startServer(config).catch((error) => {
-    console.error('Server failed to start:', error);
-    process.exit(1);
-});
