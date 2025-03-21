@@ -16,18 +16,23 @@ export function loadConfig(options: CommandOptions): AgentConfig {
         'agent_config.json';
 
     try {
-        // 尝试多个可能的路径
-        const possiblePaths = [
-            configPath, // 直接使用输入路径
-            path.resolve(process.cwd(), configPath), // 相对于当前工作目录
-            path.resolve(__dirname, configPath), // 相对于脚本所在目录
-        ];
-
+        // 处理配置文件路径
         let absolutePath = '';
-        for (const p of possiblePaths) {
-            if (fs.existsSync(p)) {
-                absolutePath = p;
-                break;
+        if (path.isAbsolute(configPath)) {
+            // 如果是绝对路径，直接使用
+            absolutePath = configPath;
+        } else {
+            // 如果是相对路径，尝试多个可能的路径
+            const possiblePaths = [
+                path.resolve(process.cwd(), configPath), // 相对于当前工作目录
+                path.resolve(__dirname, configPath), // 相对于脚本所在目录
+            ];
+
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    absolutePath = p;
+                    break;
+                }
             }
         }
 
