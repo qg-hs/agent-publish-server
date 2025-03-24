@@ -8,37 +8,21 @@
 npm install agent-publish-server -g
 ```
 
-## 使用
+## 使用步骤
 
-```bash
-agent-publish-server
-```
+### 步骤 1：初始化配置文件
 
-## 配置
-
-### 配置文件路径
-
-你可以通过以下方式指定配置文件路径：
-
-1. 使用相对路径（相对于当前工作目录）：
-
-```bash
-agent-publish-server -c ./agent_config.json
-```
-
-2. 使用绝对路径：
-
-```bash
-agent-publish-server -c /path/to/agent_config.json
-```
-
-3. 使用初始化命令创建默认配置：
+首先，初始化配置文件：
 
 ```bash
 agent-publish-server init
 ```
 
-### 配置文件格式
+这将在当前目录生成默认配置文件 `agent_config.json`。
+
+### 步骤 2：自定义配置（可选）
+
+根据需要修改生成的 `agent_config.json` 配置文件。配置格式如下：
 
 ```json
 {
@@ -58,13 +42,39 @@ agent-publish-server init
 }
 ```
 
-## 说明
+### 步骤 3：启动服务
 
-> 1. 配置文件路径为 agent_config.json
-> 2. 配置文件路径可以通过 -c 来指定
-> 3. 配置文件路径可以通过 --config 来指定
-> 4. 配置文件路径可以通过 --cf 来指定
-> 5. 配置文件路径可以通过 --config-file 来指定
-> 6. 适配 react vue 等前端框架
-> 7. 使用 -v 或 --version 查看当前版本
-> 8. 使用 init 命令初始化配置文件，将在当前目录生成 agent_config.json
+```bash
+agent-publish-server
+```
+
+## 配置选项
+
+### 指定配置文件
+
+你可以通过以下方式指定自定义配置文件路径：
+
+1. 使用相对路径（相对于当前工作目录）：
+
+```bash
+agent-publish-server -c ./agent_config.json
+```
+
+2. 使用绝对路径：
+
+```bash
+agent-publish-server -c /path/to/agent_config.json
+```
+
+支持的配置文件参数：
+
+- `-c`
+- `--config`
+- `--cf`
+- `--config-file`
+
+## 其他说明
+
+- 适配 React、Vue 等前端框架
+- 使用 `-v` 或 `--version` 查看当前版本
+- 默认配置文件名为 `agent_config.json`
