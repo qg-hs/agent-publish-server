@@ -7,6 +7,27 @@ import fs from 'fs';
 export function createServer(config: AgentConfig) {
   const app = express();
   const staticDir = config.dir || './';
+  const enableLog = config.log !== false; // 默认为true
+
+  // 检查项目路径是否存在
+  const absoluteStaticDir = path.resolve(process.cwd(), staticDir);
+  if (!fs.existsSync(absoluteStaticDir)) {
+    throw new Error('项目路径错误');
+  }
+
+  // 添加日志中间件
+  if (enableLog) {
+    app.use((req, res, next) => {
+      const timestamp = new Date().toISOString();
+      const method = req.method;
+      const url = req.url;
+      const userAgent = req.get('User-Agent') || '-';
+      const ip = req.ip || req.connection.remoteAddress || '-';
+
+      console.log(`[${timestamp}] ${ip} "${method} ${url}" "${userAgent}"`);
+      next();
+    });
+  }
 
   // 配置代理
   if (config.proxy) {
@@ -50,18 +71,24 @@ export function createServer(config: AgentConfig) {
 }
 
 export function startServer(config: AgentConfig) {
-  const app = createServer(config);
-  const port = config.port || 8080;
+  try {
+    const app = createServer(config);
+    const port = config.port || 8080;
 
-  return new Promise<void>((resolve, reject) => {
-    try {
-      app.listen(port, () => {
-        console.log(`Server is running at http://localhost:${port}`);
-        resolve();
-      });
-    } catch (error) {
-      console.error('Failed to start server:', error);
-      reject(error);
-    }
-  });
+    return new Promise<void>((resolve, reject) => {
+      try {
+        app.listen(port, () => {
+          console.log(`Server is running at http://localhost:${port}`);
+          resolve();
+        });
+      } catch (error) {
+        console.error('Failed to start server:', error);
+        reject(error);
+      }
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(errorMessage);
+    process.exit(1);
+  }
 }

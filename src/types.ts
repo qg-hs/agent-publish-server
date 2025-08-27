@@ -8,6 +8,7 @@ export interface AgentConfig {
     port?: number;
     dir?: string;
     proxy?: Record<string, ProxyConfig>;
+    log?: boolean;
 }
 
 export interface CommandOptions {
@@ -17,4 +18,6 @@ export interface CommandOptions {
     configFile?: string;
     port?: string;
     dir?: string;
+    writeProxy?: boolean;
+    log?: string;
 }
