@@ -228,6 +228,7 @@ agent-publish-server --log false
 
 ### 版本历史
 
+- **v1.0.24**: 修复移动端兼容性问题，优化HTTP响应头设置，确保iOS和Android显示一致性
 - **v1.0.23**: 完善双语文档支持，优化package.json关键词，提升npm包曝光度
 - **v1.0.22**: 优化和完善 staticProxy 功能，提升稳定性
 - **v1.0.18**: 增强 staticProxy 功能，支持静态文件代理和 HTTP 服务代理两种模式

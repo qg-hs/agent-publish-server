@@ -48,7 +48,37 @@ export function createServer(config: AgentConfig) {
           console.warn(`Warning: Static proxy path does not exist: ${staticPath}`);
           return;
         }
-        app.use(proxyPath, express.static(staticPath));
+        app.use(proxyPath, express.static(staticPath, {
+          setHeaders: (res, filePath, stat) => {
+            // 设置通用响应头，提升移动端兼容性
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+            res.setHeader('X-XSS-Protection', '1; mode=block');
+            
+            // 针对HTML文件设置移动端优化响应头
+            if (filePath.endsWith('.html')) {
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+              res.setHeader('Pragma', 'no-cache');
+              res.setHeader('Expires', '0');
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            }
+            
+            // 针对CSS文件确保正确的Content-Type
+            if (filePath.endsWith('.css')) {
+              res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            }
+            
+            // 针对JS文件确保正确的Content-Type
+            if (filePath.endsWith('.js')) {
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            }
+            
+            // 针对图片文件设置适当的缓存
+            if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+              res.setHeader('Cache-Control', 'public, max-age=31536000');
+            }
+          }
+        }));
       } else {
         // HTTP服务代理
         app.use(proxyPath, createProxyMiddleware({
@@ -62,8 +92,53 @@ export function createServer(config: AgentConfig) {
     });
   }
 
-  // 配置静态文件服务
-  app.use(express.static(staticDir));
+  // 配置静态文件服务，添加移动端兼容性响应头
+  app.use(express.static(staticDir, {
+    setHeaders: (res, filePath, stat) => {
+      // 设置通用响应头，提升移动端兼容性
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      
+      // 针对HTML文件设置移动端优化响应头
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        // 确保正确的Content-Type
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      }
+      
+      // 针对CSS文件确保正确的Content-Type
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      }
+      
+      // 针对JS文件确保正确的Content-Type
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      }
+      
+      // 针对图片文件设置适当的缓存
+      if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+      }
+    }
+  }));
+  
+  // 添加移动端兼容性中间件
+  app.use((req, res, next) => {
+    // 检测移动端User-Agent并设置相应响应头
+    const userAgent = req.get('User-Agent') || '';
+    const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    if (isMobile) {
+      // 为移动端设置额外的响应头
+      res.setHeader('Vary', 'User-Agent');
+    }
+    
+    next();
+  });
 
   // 添加SPA应用的回退路由处理
   // 只有当实际文件不存在时才回退到index.html

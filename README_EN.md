@@ -229,6 +229,8 @@ startServer(app, config.port);
 
 ## Version History
 
+- **v1.0.24**: Fixed mobile compatibility issues, optimized HTTP response headers for consistent iOS and Android display
+- **v1.0.23**: Enhanced bilingual documentation support, optimized package.json keywords for better npm exposure
 - **v1.0.22**: Optimized and improved staticProxy functionality, enhanced stability
 - **v1.0.18**: Enhanced staticProxy functionality, supporting both static file proxy and HTTP service proxy modes
 - **v1.0.17**: Added static web proxy functionality (staticProxy), supports simultaneous use with API proxy
