@@ -1,160 +1,22 @@
-# agent-publish-server
+# Agent Publish Server
 
-[English](#english) | [中文](#chinese)
+[![npm version](https://badge.fury.io/js/agent-publish-server.svg)](https://badge.fury.io/js/agent-publish-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
----
+基于 Node.js + Express + http-proxy-middleware 的前端服务启动插件，提供强大的代理和静态文件服务能力。
 
-## <a id="english"></a>English
+[English](./README_EN.md) | 中文
 
-> A frontend service startup plugin based on nodejs+express+http-proxy-middleware with proxy support
+## 功能特性
 
-### Features
-
-- 🚀 **Quick Start**: One-command startup for development server
-- 🔄 **Proxy Support**: Built-in proxy middleware for API forwarding
-- 📁 **Static File Serving**: Serve static files from any directory
-- ⚙️ **Interactive Configuration**: Easy setup with interactive CLI
-- 📝 **Access Logging**: Optional request logging with timestamps
-- 🛡️ **Path Validation**: Automatic project path validation
-- 🎯 **SPA Support**: Single Page Application routing support
-
-### Installation
-
-```bash
-npm install agent-publish-server -g
-```
-
-### Quick Start
-
-#### Method 1: Interactive Configuration (Recommended)
-
-```bash
-agent-publish-server -wp
-```
-
-This will guide you through an interactive setup:
-
-1. Enter port number
-2. Enter project directory (after build)
-3. Enter proxy configuration (format: `/api:http://localhost:3000`)
-4. Choose to continue adding proxies (1: continue, 0: finish)
-5. Generate `agent_config.json` and get startup command
-
-#### Method 2: Manual Configuration
-
-1. **Initialize configuration file:**
-
-```bash
-agent-publish-server init
-```
-
-2. **Edit the generated `agent_config.json`:**
-
-```json
-{
-  "port": 8080,
-  "dir": "./",
-  "log": true,
-  "proxy": {
-    "/api": {
-      "target": "http://localhost:3000",
-      "changeOrigin": true,
-      "pathRewrite": {
-        "^/api": ""
-      }
-    }
-  }
-}
-```
-
-3. **Start the server:**
-
-```bash
-agent-publish-server -c ./agent_config.json
-```
-
-### Command Line Options
-
-| Option                | Description                     | Example                                 |
-| --------------------- | ------------------------------- | --------------------------------------- |
-| `-wp, --write-proxy`  | Interactive proxy configuration | `agent-publish-server -wp`              |
-| `-c, --config <path>` | Specify configuration file path | `agent-publish-server -c ./config.json` |
-| `-p, --port <number>` | Override port number            | `agent-publish-server -p 3000`          |
-| `-d, --dir <path>`    | Override static directory       | `agent-publish-server -d ./dist`        |
-| `--log <boolean>`     | Enable/disable access logging   | `agent-publish-server --log false`      |
-| `-v, --version`       | Show version                    | `agent-publish-server -v`               |
-| `init`                | Initialize configuration file   | `agent-publish-server init`             |
-
-### Configuration Schema
-
-```typescript
-interface AgentConfig {
-  port?: number; // Server port (default: 8080)
-  dir?: string; // Static files directory (default: "./")
-  log?: boolean; // Enable access logging (default: true)
-  proxy?: {
-    // Proxy configurations
-    [path: string]: {
-      target: string; // Target URL
-      changeOrigin?: boolean; // Change origin header
-      pathRewrite?: {
-        // Path rewrite rules
-        [pattern: string]: string;
-      };
-    };
-  };
-}
-```
-
-### Access Logging
-
-Access logging is enabled by default and shows:
-
-- Timestamp (ISO format)
-- Client IP address
-- HTTP method and URL
-- User agent string
-
-Example log output:
-
-```
-[2025-08-27T11:02:48.854Z] ::1 "GET /" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-```
-
-To disable logging:
-
-```bash
-agent-publish-server --log false
-```
-
-### Error Handling
-
-- **Invalid project path**: Shows "项目路径错误" (Project path error) and exits
-- **Invalid port**: Validates port numbers (1-65535)
-- **Missing configuration**: Falls back to defaults
-
-### Use Cases
-
-- **React/Vue Development**: Serve built applications with API proxying
-- **Frontend Testing**: Quick static file serving with CORS handling
-- **Local Development**: Proxy API calls to backend services
-- **SPA Deployment**: Proper routing support for single-page applications
-
----
-
-## <a id="chinese"></a>中文
-
-> 这是一个基于 nodejs+express+http-proxy-middleware 的一款可支持代理的前端服务启动插件
-
-### 功能特性
-
-- 🚀 **快速启动**: 一键启动开发服务器
-- 🔄 **代理支持**: 内置代理中间件，支持 API 转发
-- 📁 **静态文件服务**: 支持任意目录的静态文件托管
-- ⚙️ **交互式配置**: 通过问答方式轻松配置
-- 📝 **访问日志**: 可选的请求日志记录功能
-- 🛡️ **路径验证**: 自动验证项目路径有效性
-- 🎯 **SPA 支持**: 单页应用路由支持
+- 🚀 **快速启动**：一键启动，支持交互式配置
+- 🔄 **API 代理**：灵活的 API 请求代理，支持跨域处理
+- 📁 **静态代理**：支持静态文件服务和 HTTP 服务代理两种模式
+- 🌐 **双重模式**：静态文件代理和 HTTP 服务代理可同时使用
+- 📝 **访问日志**：实时请求日志记录和监控
+- ⚡ **路径验证**：自动路径存在性检查和验证
+- 🛠️ **CLI 支持**：命令行工具，易于集成到构建流程
+- 📋 **配置文件**：支持 JSON 配置文件，灵活配置各种代理规则
 
 ### 安装
 
@@ -231,7 +93,7 @@ interface AgentConfig {
   dir?: string; // 静态文件目录（默认："./"）
   log?: boolean; // 启用访问日志（默认：true）
   proxy?: {
-    // 代理配置
+    // API代理配置
     [path: string]: {
       target: string; // 目标URL
       changeOrigin?: boolean; // 更改源头
@@ -241,8 +103,92 @@ interface AgentConfig {
       };
     };
   };
+  staticProxy?: {
+    // 静态网页代理配置
+    [path: string]: {
+      target: string; // 目标URL或本地文件路径
+      type?: "http" | "static"; // 代理类型（默认：http）
+      changeOrigin?: boolean; // 更改源头，仅http类型有效（默认：true）
+    };
+  };
 }
 ```
+
+### 静态网页代理
+
+除了 API 代理外，还支持静态网页代理功能，用于代理整个网站或应用。
+
+#### 配置示例
+
+**静态文件代理：**
+
+```json
+{
+  "staticProxy": {
+    "/sub_page": {
+      "target": "./dist",
+      "type": "static"
+    }
+  }
+}
+```
+
+**HTTP 服务代理：**
+
+```json
+{
+  "staticProxy": {
+    "/app": {
+      "target": "http://localhost:3000",
+      "type": "http",
+      "changeOrigin": true
+    }
+  }
+}
+```
+
+#### 功能特性
+
+- **双重代理模式**：支持静态文件代理和 HTTP 服务代理
+- **静态文件代理**：直接代理到本地文件系统目录
+- **HTTP 服务代理**：代理到远程 HTTP 服务，支持路径重写
+- **自动路径处理**：自动处理代理路径前缀
+- **优先级处理**：静态代理优先于默认静态文件服务
+- **路径验证**：自动检查静态文件路径是否存在
+
+#### 与 API 代理组合使用
+
+`staticProxy` 可以与 `proxy` 配置同时使用：
+
+```json
+{
+  "proxy": {
+    "/api": {
+      "target": "http://localhost:3000",
+      "changeOrigin": true,
+      "pathRewrite": { "^/api": "" }
+    }
+  },
+  "staticProxy": {
+    "/dist_files": {
+      "target": "./dist",
+      "type": "static"
+    },
+    "/remote_app": {
+      "target": "http://localhost:3001",
+      "type": "http",
+      "changeOrigin": true
+    }
+  }
+}
+```
+
+这样配置后：
+
+- 访问 `/api/*` 会代理到 `http://localhost:3000/*`（API 服务）
+- 访问 `/dist_files/*` 会访问本地 `./dist` 目录下的静态文件
+- 访问 `/remote_app/*` 会代理到 `http://localhost:3001/*`（远程应用）
+- 其他路径会访问默认静态文件目录
 
 ### 访问日志
 
@@ -277,9 +223,15 @@ agent-publish-server --log false
 - **前端测试**：快速静态文件服务，处理跨域问题
 - **本地开发**：代理 API 调用到后端服务
 - **SPA 部署**：为单页应用提供正确的路由支持
+- **微前端架构**：通过静态代理整合多个前端应用
+- **开发环境整合**：将多个本地服务统一到一个端口访问
 
 ### 版本历史
 
+- **v1.0.23**: 完善双语文档支持，优化package.json关键词，提升npm包曝光度
+- **v1.0.22**: 优化和完善 staticProxy 功能，提升稳定性
+- **v1.0.18**: 增强 staticProxy 功能，支持静态文件代理和 HTTP 服务代理两种模式
+- **v1.0.17**: 新增静态网页代理功能（staticProxy），支持与 API 代理同时使用
 - **v1.0.16**: 新增交互式配置、访问日志、路径验证功能
 - **v1.0.15**: 基础代理和静态文件服务功能
 

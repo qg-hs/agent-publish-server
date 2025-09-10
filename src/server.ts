@@ -1,6 +1,6 @@
 import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { AgentConfig, ProxyConfig } from './types';
+import { AgentConfig, ProxyConfig, StaticProxyConfig } from './types';
 import path from 'path';
 import fs from 'fs';
 
@@ -29,10 +29,36 @@ export function createServer(config: AgentConfig) {
     });
   }
 
-  // 配置代理
+  // 配置API代理
   if (config.proxy) {
     Object.entries(config.proxy).forEach(([path, proxyConfig]) => {
       app.use(path, createProxyMiddleware(proxyConfig));
+    });
+  }
+
+  // 配置静态网页代理
+  if (config.staticProxy) {
+    Object.entries(config.staticProxy).forEach(([proxyPath, staticProxyConfig]) => {
+      const proxyType = staticProxyConfig.type || 'http'; // 默认为http类型
+      
+      if (proxyType === 'static') {
+        // 静态文件代理
+        const staticPath = path.resolve(process.cwd(), staticProxyConfig.target);
+        if (!fs.existsSync(staticPath)) {
+          console.warn(`Warning: Static proxy path does not exist: ${staticPath}`);
+          return;
+        }
+        app.use(proxyPath, express.static(staticPath));
+      } else {
+        // HTTP服务代理
+        app.use(proxyPath, createProxyMiddleware({
+          target: staticProxyConfig.target,
+          changeOrigin: staticProxyConfig.changeOrigin !== false, // 默认为true
+          pathRewrite: {
+            [`^${proxyPath}`]: '' // 移除代理路径前缀
+          }
+        }));
+      }
     });
   }
 
@@ -45,6 +71,15 @@ export function createServer(config: AgentConfig) {
     // 排除API和已处理的代理请求
     if (req.path.startsWith('/api/')) {
       return next();
+    }
+
+    // 排除静态代理路径
+    if (config.staticProxy) {
+      for (const proxyPath of Object.keys(config.staticProxy)) {
+        if (req.path.startsWith(proxyPath)) {
+          return next();
+        }
+      }
     }
 
     const filePath = path.join(process.cwd(), staticDir, req.path);

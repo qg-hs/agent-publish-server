@@ -1,0 +1,16 @@
+{
+  "port": 8080,
+  "dir": "./",
+  "staticProxy": {
+    "/sub_page": {
+      "target": "./dist",
+      "type": "static"
+    },
+    "/app": {
+      "target": "http://localhost:3000",
+      "type": "http",
+      "changeOrigin": true
+    }
+  },
+  "log": true
+}
