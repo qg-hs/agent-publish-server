@@ -1,18 +1,18 @@
-import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
-import { AgentConfig, ProxyConfig, StaticProxyConfig } from './types';
-import path from 'path';
-import fs from 'fs';
+import express from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import { AgentConfig, ProxyConfig, StaticProxyConfig } from "./types";
+import path from "path";
+import fs from "fs";
 
 export function createServer(config: AgentConfig) {
   const app = express();
-  const staticDir = config.dir || './';
+  const staticDir = config.dir || "./";
   const enableLog = config.log !== false; // 默认为true
 
   // 检查项目路径是否存在
   const absoluteStaticDir = path.resolve(process.cwd(), staticDir);
   if (!fs.existsSync(absoluteStaticDir)) {
-    throw new Error('项目路径错误');
+    throw new Error("项目路径错误");
   }
 
   // 添加日志中间件
@@ -21,8 +21,8 @@ export function createServer(config: AgentConfig) {
       const timestamp = new Date().toISOString();
       const method = req.method;
       const url = req.url;
-      const userAgent = req.get('User-Agent') || '-';
-      const ip = req.ip || req.connection.remoteAddress || '-';
+      const userAgent = req.get("User-Agent") || "-";
+      const ip = req.ip || req.connection.remoteAddress || "-";
 
       console.log(`[${timestamp}] ${ip} "${method} ${url}" "${userAgent}"`);
       next();
@@ -38,105 +38,158 @@ export function createServer(config: AgentConfig) {
 
   // 配置静态网页代理
   if (config.staticProxy) {
-    Object.entries(config.staticProxy).forEach(([proxyPath, staticProxyConfig]) => {
-      const proxyType = staticProxyConfig.type || 'http'; // 默认为http类型
-      
-      if (proxyType === 'static') {
-        // 静态文件代理
-        const staticPath = path.resolve(process.cwd(), staticProxyConfig.target);
-        if (!fs.existsSync(staticPath)) {
-          console.warn(`Warning: Static proxy path does not exist: ${staticPath}`);
-          return;
+    Object.entries(config.staticProxy).forEach(
+      ([proxyPath, staticProxyConfig]) => {
+        const proxyType = staticProxyConfig.type || "http"; // 默认为http类型
+
+        if (proxyType === "static") {
+          // 静态文件代理
+          const staticPath = path.resolve(
+            process.cwd(),
+            staticProxyConfig.target
+          );
+          if (!fs.existsSync(staticPath)) {
+            console.warn(
+              `Warning: Static proxy path does not exist: ${staticPath}`
+            );
+            return;
+          }
+
+          // 静态文件服务
+          app.use(
+            proxyPath,
+            express.static(staticPath, {
+              setHeaders: (res, filePath, stat) => {
+                // 设置通用响应头，提升移动端兼容性
+                res.setHeader("X-Content-Type-Options", "nosniff");
+                res.setHeader("X-Frame-Options", "SAMEORIGIN");
+                res.setHeader("X-XSS-Protection", "1; mode=block");
+
+                // 针对HTML文件设置移动端优化响应头
+                if (filePath.endsWith(".html")) {
+                  res.setHeader(
+                    "Cache-Control",
+                    "no-cache, no-store, must-revalidate"
+                  );
+                  res.setHeader("Pragma", "no-cache");
+                  res.setHeader("Expires", "0");
+                  res.setHeader("Content-Type", "text/html; charset=utf-8");
+                }
+
+                // 针对CSS文件确保正确的Content-Type
+                if (filePath.endsWith(".css")) {
+                  res.setHeader("Content-Type", "text/css; charset=utf-8");
+                }
+
+                // 针对JS文件确保正确的Content-Type
+                if (filePath.endsWith(".js")) {
+                  res.setHeader(
+                    "Content-Type",
+                    "application/javascript; charset=utf-8"
+                  );
+                }
+
+                // 针对图片文件设置适当的缓存
+                if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+                  res.setHeader("Cache-Control", "public, max-age=31536000");
+                }
+              },
+            })
+          );
+
+          // SPA fallback：静态文件不存在时回退到 index.html
+          app.use(proxyPath, (req, res, next) => {
+            const reqPath = req.path === "/" ? "" : req.path;
+            const filePath = path.join(staticPath, reqPath);
+            const indexPath = path.join(staticPath, "index.html");
+
+            // 如果请求的文件存在，跳过（已被 express.static 处理）
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              return next();
+            }
+
+            // 如果 index.html 存在，返回它（SPA fallback）
+            if (fs.existsSync(indexPath)) {
+              res.setHeader(
+                "Cache-Control",
+                "no-cache, no-store, must-revalidate"
+              );
+              res.setHeader("Content-Type", "text/html; charset=utf-8");
+              return res.sendFile(indexPath);
+            }
+
+            next();
+          });
+        } else {
+          // HTTP服务代理
+          app.use(
+            proxyPath,
+            createProxyMiddleware({
+              target: staticProxyConfig.target,
+              changeOrigin: staticProxyConfig.changeOrigin !== false, // 默认为true
+              pathRewrite: {
+                [`^${proxyPath}`]: "", // 移除代理路径前缀
+              },
+            })
+          );
         }
-        app.use(proxyPath, express.static(staticPath, {
-          setHeaders: (res, filePath, stat) => {
-            // 设置通用响应头，提升移动端兼容性
-            res.setHeader('X-Content-Type-Options', 'nosniff');
-            res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-            res.setHeader('X-XSS-Protection', '1; mode=block');
-            
-            // 针对HTML文件设置移动端优化响应头
-            if (filePath.endsWith('.html')) {
-              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-              res.setHeader('Pragma', 'no-cache');
-              res.setHeader('Expires', '0');
-              res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            }
-            
-            // 针对CSS文件确保正确的Content-Type
-            if (filePath.endsWith('.css')) {
-              res.setHeader('Content-Type', 'text/css; charset=utf-8');
-            }
-            
-            // 针对JS文件确保正确的Content-Type
-            if (filePath.endsWith('.js')) {
-              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-            }
-            
-            // 针对图片文件设置适当的缓存
-            if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-              res.setHeader('Cache-Control', 'public, max-age=31536000');
-            }
-          }
-        }));
-      } else {
-        // HTTP服务代理
-        app.use(proxyPath, createProxyMiddleware({
-          target: staticProxyConfig.target,
-          changeOrigin: staticProxyConfig.changeOrigin !== false, // 默认为true
-          pathRewrite: {
-            [`^${proxyPath}`]: '' // 移除代理路径前缀
-          }
-        }));
       }
-    });
+    );
   }
 
   // 配置静态文件服务，添加移动端兼容性响应头
-  app.use(express.static(staticDir, {
-    setHeaders: (res, filePath, stat) => {
-      // 设置通用响应头，提升移动端兼容性
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-      res.setHeader('X-XSS-Protection', '1; mode=block');
-      
-      // 针对HTML文件设置移动端优化响应头
-      if (filePath.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        // 确保正确的Content-Type
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      }
-      
-      // 针对CSS文件确保正确的Content-Type
-      if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-      }
-      
-      // 针对JS文件确保正确的Content-Type
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      }
-      
-      // 针对图片文件设置适当的缓存
-      if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-      }
-    }
-  }));
-  
+  app.use(
+    express.static(staticDir, {
+      setHeaders: (res, filePath, stat) => {
+        // 设置通用响应头，提升移动端兼容性
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("X-Frame-Options", "SAMEORIGIN");
+        res.setHeader("X-XSS-Protection", "1; mode=block");
+
+        // 针对HTML文件设置移动端优化响应头
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+          // 确保正确的Content-Type
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+        }
+
+        // 针对CSS文件确保正确的Content-Type
+        if (filePath.endsWith(".css")) {
+          res.setHeader("Content-Type", "text/css; charset=utf-8");
+        }
+
+        // 针对JS文件确保正确的Content-Type
+        if (filePath.endsWith(".js")) {
+          res.setHeader(
+            "Content-Type",
+            "application/javascript; charset=utf-8"
+          );
+        }
+
+        // 针对图片文件设置适当的缓存
+        if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000");
+        }
+      },
+    })
+  );
+
   // 添加移动端兼容性中间件
   app.use((req, res, next) => {
     // 检测移动端User-Agent并设置相应响应头
-    const userAgent = req.get('User-Agent') || '';
-    const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    
+    const userAgent = req.get("User-Agent") || "";
+    const isMobile =
+      /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        userAgent
+      );
+
     if (isMobile) {
       // 为移动端设置额外的响应头
-      res.setHeader('Vary', 'User-Agent');
+      res.setHeader("Vary", "User-Agent");
     }
-    
+
     next();
   });
 
@@ -144,7 +197,7 @@ export function createServer(config: AgentConfig) {
   // 只有当实际文件不存在时才回退到index.html
   app.use((req, res, next) => {
     // 排除API和已处理的代理请求
-    if (req.path.startsWith('/api/')) {
+    if (req.path.startsWith("/api/")) {
       return next();
     }
 
@@ -162,7 +215,7 @@ export function createServer(config: AgentConfig) {
     // 检查是否为目录
     if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
       // 检查目录中是否有index.html
-      const indexPath = path.join(filePath, 'index.html');
+      const indexPath = path.join(filePath, "index.html");
       if (fs.existsSync(indexPath)) {
         return res.sendFile(indexPath);
       }
@@ -174,7 +227,7 @@ export function createServer(config: AgentConfig) {
     }
 
     // 如果路径不存在，回退到index.html
-    res.sendFile(path.join(process.cwd(), staticDir, 'index.html'));
+    res.sendFile(path.join(process.cwd(), staticDir, "index.html"));
   });
 
   return app;
@@ -192,7 +245,7 @@ export function startServer(config: AgentConfig) {
           resolve();
         });
       } catch (error) {
-        console.error('Failed to start server:', error);
+        console.error("Failed to start server:", error);
         reject(error);
       }
     });

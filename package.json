@@ -1,6 +1,6 @@
 {
   "name": "agent-publish-server",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "A powerful frontend development server with API proxy, static file serving, and dual-mode static proxy support. Built with Node.js + Express + http-proxy-middleware. 基于 Node.js + Express + http-proxy-middleware 的强大前端开发服务器，支持API代理、静态文件服务和双模式静态代理。",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -229,6 +229,7 @@ startServer(app, config.port);
 
 ## Version History
 
+- **v1.0.25**: Fixed staticProxy static type not supporting SPA History route refresh, added automatic fallback to index.html
 - **v1.0.24**: Fixed mobile compatibility issues, optimized HTTP response headers for consistent iOS and Android display
 - **v1.0.23**: Enhanced bilingual documentation support, optimized package.json keywords for better npm exposure
 - **v1.0.22**: Optimized and improved staticProxy functionality, enhanced stability
