@@ -77,8 +77,28 @@ agent-publish-server -c config.json
 
 - **port**: Server port (default: 3000)
 - **dir**: Static file directory (default: current directory)
+- **redirect**: Root path redirect, e.g. "/app" redirects / to /app
 - **proxy**: API proxy configuration
 - **staticProxy**: Static proxy configuration
+
+### Root Path Redirect
+
+Use `redirect` to automatically redirect root path to a specified path:
+
+```json
+{
+  "port": 3000,
+  "redirect": "/app",
+  "staticProxy": {
+    "/app": {
+      "target": "./dist",
+      "type": "static"
+    }
+  }
+}
+```
+
+With this config, accessing `http://localhost:3000/` will redirect to `http://localhost:3000/app`.
 
 #### API Proxy Configuration (ProxyConfig)
 
@@ -229,6 +249,7 @@ startServer(app, config.port);
 
 ## Version History
 
+- **v1.0.26**: Added root path redirect configuration (redirect), supports automatic redirect when accessing /
 - **v1.0.25**: Fixed staticProxy static type not supporting SPA History route refresh, added automatic fallback to index.html
 - **v1.0.24**: Fixed mobile compatibility issues, optimized HTTP response headers for consistent iOS and Android display
 - **v1.0.23**: Enhanced bilingual documentation support, optimized package.json keywords for better npm exposure

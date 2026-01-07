@@ -29,6 +29,16 @@ export function createServer(config: AgentConfig) {
     });
   }
 
+  // 根路径重定向配置
+  if (config.redirect) {
+    app.get("/", (req, res) => {
+      const redirectPath = config.redirect!.startsWith("/")
+        ? config.redirect!
+        : `/${config.redirect}`;
+      res.redirect(302, redirectPath);
+    });
+  }
+
   // 配置API代理
   if (config.proxy) {
     Object.entries(config.proxy).forEach(([path, proxyConfig]) => {
