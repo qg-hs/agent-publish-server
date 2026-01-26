@@ -56,11 +56,11 @@ export function createServer(config: AgentConfig) {
           // 静态文件代理
           const staticPath = path.resolve(
             process.cwd(),
-            staticProxyConfig.target
+            staticProxyConfig.target,
           );
           if (!fs.existsSync(staticPath)) {
             console.warn(
-              `Warning: Static proxy path does not exist: ${staticPath}`
+              `Warning: Static proxy path does not exist: ${staticPath}`,
             );
             return;
           }
@@ -79,7 +79,7 @@ export function createServer(config: AgentConfig) {
                 if (filePath.endsWith(".html")) {
                   res.setHeader(
                     "Cache-Control",
-                    "no-cache, no-store, must-revalidate"
+                    "no-cache, no-store, must-revalidate",
                   );
                   res.setHeader("Pragma", "no-cache");
                   res.setHeader("Expires", "0");
@@ -95,7 +95,7 @@ export function createServer(config: AgentConfig) {
                 if (filePath.endsWith(".js")) {
                   res.setHeader(
                     "Content-Type",
-                    "application/javascript; charset=utf-8"
+                    "application/javascript; charset=utf-8",
                   );
                 }
 
@@ -104,7 +104,7 @@ export function createServer(config: AgentConfig) {
                   res.setHeader("Cache-Control", "public, max-age=31536000");
                 }
               },
-            })
+            }),
           );
 
           // SPA fallback：静态文件不存在时回退到 index.html
@@ -122,7 +122,7 @@ export function createServer(config: AgentConfig) {
             if (fs.existsSync(indexPath)) {
               res.setHeader(
                 "Cache-Control",
-                "no-cache, no-store, must-revalidate"
+                "no-cache, no-store, must-revalidate",
               );
               res.setHeader("Content-Type", "text/html; charset=utf-8");
               return res.sendFile(indexPath);
@@ -140,10 +140,10 @@ export function createServer(config: AgentConfig) {
               pathRewrite: {
                 [`^${proxyPath}`]: "", // 移除代理路径前缀
               },
-            })
+            }),
           );
         }
-      }
+      },
     );
   }
 
@@ -174,7 +174,7 @@ export function createServer(config: AgentConfig) {
         if (filePath.endsWith(".js")) {
           res.setHeader(
             "Content-Type",
-            "application/javascript; charset=utf-8"
+            "application/javascript; charset=utf-8",
           );
         }
 
@@ -183,7 +183,7 @@ export function createServer(config: AgentConfig) {
           res.setHeader("Cache-Control", "public, max-age=31536000");
         }
       },
-    })
+    }),
   );
 
   // 添加移动端兼容性中间件
@@ -192,7 +192,7 @@ export function createServer(config: AgentConfig) {
     const userAgent = req.get("User-Agent") || "";
     const isMobile =
       /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        userAgent
+        userAgent,
       );
 
     if (isMobile) {
@@ -204,7 +204,7 @@ export function createServer(config: AgentConfig) {
   });
 
   // 添加SPA应用的回退路由处理
-  // 只有当实际文件不存在时才回退到index.html
+  // 只有当实际文件不存在时才回退到index.html或执行fallbackRedirect
   app.use((req, res, next) => {
     // 排除API和已处理的代理请求
     if (req.path.startsWith("/api/")) {
@@ -236,8 +236,22 @@ export function createServer(config: AgentConfig) {
       return res.sendFile(filePath);
     }
 
-    // 如果路径不存在，回退到index.html
-    res.sendFile(path.join(process.cwd(), staticDir, "index.html"));
+    // 如果配置了fallbackRedirect，则重定向到指定路径
+    if (config.fallbackRedirect) {
+      const redirectPath = config.fallbackRedirect.startsWith("/")
+        ? config.fallbackRedirect
+        : `/${config.fallbackRedirect}`;
+      return res.redirect(302, redirectPath);
+    }
+
+    // 如果路径不存在且未配置fallbackRedirect，回退到index.html
+    const rootIndexPath = path.join(process.cwd(), staticDir, "index.html");
+    if (fs.existsSync(rootIndexPath)) {
+      return res.sendFile(rootIndexPath);
+    }
+
+    // 如果index.html也不存在，返回404
+    res.status(404).send("404 Not Found");
   });
 
   return app;

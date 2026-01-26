@@ -14,6 +14,7 @@ export interface AgentConfig {
   port?: number;
   dir?: string;
   redirect?: string; // 根路径重定向，如 "/app" 表示访问 / 时重定向到 /app
+  fallbackRedirect?: string; // 404兜底重定向，当路由匹配不上时重定向到指定路径
   proxy?: Record<string, ProxyConfig>;
   staticProxy?: Record<string, StaticProxyConfig>;
   log?: boolean;

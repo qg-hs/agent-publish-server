@@ -92,6 +92,7 @@ interface AgentConfig {
   port?: number; // 服务器端口（默认：8080）
   dir?: string; // 静态文件目录（默认："./"）
   redirect?: string; // 根路径重定向，如 "/app" 表示访问 / 时重定向到 /app
+  fallbackRedirect?: string; // 404兜底重定向，当路由匹配不上时重定向到指定路径
   log?: boolean; // 启用访问日志（默认：true）
   proxy?: {
     // API代理配置
@@ -133,6 +134,30 @@ interface AgentConfig {
 ```
 
 这样配置后，访问 `http://localhost:3000/` 会自动重定向到 `http://localhost:3000/app`。
+
+### 404兜底重定向
+
+通过 `fallbackRedirect` 配置实现当路由匹配不上时自动重定向到指定路径，避免出现黑屏或404页面：
+
+```json
+{
+  "port": 3000,
+  "redirect": "/app",
+  "fallbackRedirect": "/app",
+  "staticProxy": {
+    "/app": {
+      "target": "./dist",
+      "type": "static"
+    }
+  }
+}
+```
+
+这样配置后：
+
+- 访问 `http://localhost:3000/` 会自动重定向到 `/app`
+- 访问不存在的路由（如 `/unknown`）也会重定向到 `/app`
+- 已配置的 `staticProxy` 路径仍正常访问，不受影响
 
 ### 静态网页代理
 
@@ -248,6 +273,7 @@ agent-publish-server --log false
 
 ### 版本历史
 
+- **v1.0.27**: 新增404兜底重定向配置（fallbackRedirect），当路由匹配不上时自动重定向到指定路径，避免黑屏或404错误
 - **v1.0.26**: 新增根路径重定向配置（redirect），支持访问 / 时自动跳转到指定路径
 - **v1.0.25**: 修复 staticProxy static 类型不支持 SPA History 路由刷新的问题，添加自动 fallback 到 index.html 支持
 - **v1.0.24**: 修复移动端兼容性问题，优化 HTTP 响应头设置，确保 iOS 和 Android 显示一致性
