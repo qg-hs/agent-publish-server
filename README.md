@@ -99,6 +99,7 @@ interface AgentConfig {
     [path: string]: {
       target: string; // 目标URL
       changeOrigin?: boolean; // 更改源头
+      ws?: boolean; // 启用 WebSocket 代理
       pathRewrite?: {
         // 路径重写规则
         [pattern: string]: string;
@@ -273,6 +274,7 @@ agent-publish-server --log false
 
 ### 版本历史
 
+- **v1.0.28**: 新增 proxy.ws 配置，支持 WebSocket upgrade 代理转发
 - **v1.0.27**: 新增404兜底重定向配置（fallbackRedirect），当路由匹配不上时自动重定向到指定路径，避免黑屏或404错误
 - **v1.0.26**: 新增根路径重定向配置（redirect），支持访问 / 时自动跳转到指定路径
 - **v1.0.25**: 修复 staticProxy static 类型不支持 SPA History 路由刷新的问题，添加自动 fallback 到 index.html 支持

@@ -1,10 +1,15 @@
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { AgentConfig, ProxyConfig, StaticProxyConfig } from "./types";
+import { AgentConfig } from "./types";
 import path from "path";
 import fs from "fs";
 
-export function createServer(config: AgentConfig) {
+type ProxyMiddleware = ReturnType<typeof createProxyMiddleware>;
+
+export function createServer(
+  config: AgentConfig,
+  wsProxyMiddlewares: ProxyMiddleware[] = [],
+) {
   const app = express();
   const staticDir = config.dir || "./";
   const enableLog = config.log !== false; // 默认为true
@@ -41,8 +46,13 @@ export function createServer(config: AgentConfig) {
 
   // 配置API代理
   if (config.proxy) {
-    Object.entries(config.proxy).forEach(([path, proxyConfig]) => {
-      app.use(path, createProxyMiddleware(proxyConfig));
+    Object.entries(config.proxy).forEach(([proxyPath, proxyConfig]) => {
+      const proxyMiddleware = createProxyMiddleware(proxyPath, proxyConfig);
+      app.use(proxyMiddleware);
+
+      if (proxyConfig.ws === true) {
+        wsProxyMiddlewares.push(proxyMiddleware);
+      }
     });
   }
 
@@ -259,14 +269,21 @@ export function createServer(config: AgentConfig) {
 
 export function startServer(config: AgentConfig) {
   try {
-    const app = createServer(config);
+    const wsProxyMiddlewares: ProxyMiddleware[] = [];
+    const app = createServer(config, wsProxyMiddlewares);
     const port = config.port || 8080;
 
     return new Promise<void>((resolve, reject) => {
       try {
-        app.listen(port, () => {
+        const server = app.listen(port, () => {
           console.log(`Server is running at http://localhost:${port}`);
           resolve();
+        });
+
+        wsProxyMiddlewares.forEach((proxyMiddleware) => {
+          if (proxyMiddleware.upgrade) {
+            server.on("upgrade", proxyMiddleware.upgrade);
+          }
         });
       } catch (error) {
         console.error("Failed to start server:", error);

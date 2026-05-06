@@ -2,6 +2,7 @@ export interface ProxyConfig {
   target: string;
   changeOrigin?: boolean;
   pathRewrite?: Record<string, string>;
+  ws?: boolean; // 启用 WebSocket 代理
 }
 
 export interface StaticProxyConfig {

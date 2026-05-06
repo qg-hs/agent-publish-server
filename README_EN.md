@@ -106,6 +106,7 @@ With this config, accessing `http://localhost:3000/` will redirect to `http://lo
 interface ProxyConfig {
   target: string; // Target server URL
   changeOrigin?: boolean; // Change origin header
+  ws?: boolean; // Enable WebSocket proxy
   pathRewrite?: Record<string, string>; // Path rewriting rules
 }
 ```
@@ -249,6 +250,8 @@ startServer(app, config.port);
 
 ## Version History
 
+- **v1.0.28**: Added proxy.ws configuration to support WebSocket upgrade proxy forwarding
+- **v1.0.27**: Added 404 fallback redirect configuration (fallbackRedirect), automatically redirects unmatched routes to the specified path
 - **v1.0.26**: Added root path redirect configuration (redirect), supports automatic redirect when accessing /
 - **v1.0.25**: Fixed staticProxy static type not supporting SPA History route refresh, added automatic fallback to index.html
 - **v1.0.24**: Fixed mobile compatibility issues, optimized HTTP response headers for consistent iOS and Android display
